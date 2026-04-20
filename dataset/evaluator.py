@@ -11,7 +11,9 @@ import numpy as np
 import torch.nn as nn
 
 def generate_one_motion_IG_rvq(vq_model, gemma_model, res_model, tokenizer, input, codebook_emb):
-    
+    # Infer device from the model
+    device = next(gemma_model.parameters()).device
+
     def find_closest_tokens(net, res_model, input, embeddings):
         converted_embeddings = []
         for i in range(embeddings.shape[0]):
@@ -20,9 +22,9 @@ def generate_one_motion_IG_rvq(vq_model, gemma_model, res_model, tokenizer, inpu
                 loss.append(nn.functional.mse_loss(embeddings[i:i+1, :], codebook_emb[j:j+1, :]))
             loss = torch.stack(loss)
             converted_embeddings.append(torch.argmin(loss).item())
-        mids = torch.tensor(converted_embeddings).cuda()
+        mids = torch.tensor(converted_embeddings).to(device)
         mids = mids.unsqueeze(0)
-        length = torch.LongTensor([mids.shape[-1]]).cuda()
+        length = torch.LongTensor([mids.shape[-1]]).to(device)
         mids = res_model.generate(mids, [input], length, temperature=1, cond_scale=5)
         return net.forward_decoder(mids)
 
@@ -30,7 +32,7 @@ def generate_one_motion_IG_rvq(vq_model, gemma_model, res_model, tokenizer, inpu
     instruction = "### Instruction:\nGenerate motions of two people interacting matching the following input human motions description. Two people's motion should be divided using <Divide>.\n\n"
     input_text = '### Input:\n' + input + '\n\nResponse: <Motion>'
     input_texts = prompt + instruction + input_text
-    input_ids = tokenizer.encode(input_texts, return_tensors="pt").cuda()
+    input_ids = tokenizer.encode(input_texts, return_tensors="pt").to(device)
     motion = gemma_model.generate(input_ids, max_length=300, num_beams=5, no_repeat_ngram_size=2, early_stopping=True)
     # print(motion.shape)
     motion = motion[0, len(input_ids[0]):]
@@ -65,7 +67,9 @@ def generate_one_motion_IG_rvq(vq_model, gemma_model, res_model, tokenizer, inpu
     return motion1, motion2
 
 def generate_one_motion_IG_rvq_v1_1(vq_model, gemma_model, res_model, tokenizer, input, codebook_emb):
-    
+    # Infer device from the model
+    device = next(gemma_model.parameters()).device
+
     def find_closest_tokens(net, res_model, input, embeddings):
         converted_embeddings = []
         for i in range(embeddings.shape[0]):
@@ -74,9 +78,9 @@ def generate_one_motion_IG_rvq_v1_1(vq_model, gemma_model, res_model, tokenizer,
                 loss.append(nn.functional.mse_loss(embeddings[i:i+1, :], codebook_emb[j:j+1, :]))
             loss = torch.stack(loss)
             converted_embeddings.append(torch.argmin(loss).item())
-        mids = torch.tensor(converted_embeddings).cuda()
+        mids = torch.tensor(converted_embeddings).to(device)
         mids = mids.unsqueeze(0)
-        length = torch.LongTensor([mids.shape[-1]]).cuda()
+        length = torch.LongTensor([mids.shape[-1]]).to(device)
         mids = res_model.generate(mids, [input], length, temperature=1, cond_scale=5)
         return net.forward_decoder(mids)
 
@@ -84,7 +88,7 @@ def generate_one_motion_IG_rvq_v1_1(vq_model, gemma_model, res_model, tokenizer,
     instruction = "### Instruction:\nGenerate motions of two interacting humans matching the following input human motions description. Two people's motion should be divided using a comma.\n\n"
     input_text = '### Input:\n' + input + '\n\nResponse: '
     input_texts = prompt + instruction + input_text
-    input_ids = tokenizer.encode(input_texts, return_tensors="pt").cuda()
+    input_ids = tokenizer.encode(input_texts, return_tensors="pt").to(device)
     motion = gemma_model.generate(input_ids, max_length=300, num_beams=5)
     # print(motion.shape)
     motion = motion[0, len(input_ids[0]):]
@@ -119,7 +123,9 @@ def generate_one_motion_IG_rvq_v1_1(vq_model, gemma_model, res_model, tokenizer,
     return motion1, motion2
 
 def generate_one_motion_IG_rvq_v3(vq_model, gemma_model, res_model, tokenizer, input, codebook_emb):
-    
+    # Infer device from the model
+    device = next(gemma_model.parameters()).device
+
     def find_closest_tokens(net, res_model, input, embeddings):
         converted_embeddings = []
         for i in range(embeddings.shape[0]):
@@ -128,9 +134,9 @@ def generate_one_motion_IG_rvq_v3(vq_model, gemma_model, res_model, tokenizer, i
                 loss.append(nn.functional.mse_loss(embeddings[i:i+1, :], codebook_emb[j:j+1, :]))
             loss = torch.stack(loss)
             converted_embeddings.append(torch.argmin(loss).item())
-        mids = torch.tensor(converted_embeddings).cuda()
+        mids = torch.tensor(converted_embeddings).to(device)
         mids = mids.unsqueeze(0)
-        length = torch.LongTensor([mids.shape[-1]]).cuda()
+        length = torch.LongTensor([mids.shape[-1]]).to(device)
         mids = res_model.generate(mids, [input], length, temperature=1, cond_scale=5)
         return net.forward_decoder(mids)
 
@@ -138,7 +144,7 @@ def generate_one_motion_IG_rvq_v3(vq_model, gemma_model, res_model, tokenizer, i
     instruction = "### Instruction:\nGenerate a motion of the first person matching the following input two humans motion description. \n\n"
     input_text = '### Input:\n' + "Description: " + input + '\n\nResponse: <Motion>'
     input_texts = prompt + instruction + input_text
-    input_ids = tokenizer.encode(input_texts, return_tensors="pt").cuda()
+    input_ids = tokenizer.encode(input_texts, return_tensors="pt").to(device)
     motion1 = gemma_model.generate(input_ids, max_length=300, num_beams=5, no_repeat_ngram_size=2, early_stopping=True)
     motion1 = motion1[0, len(input_ids[0]):]
     print(tokenizer.decode(motion1))
@@ -150,7 +156,7 @@ def generate_one_motion_IG_rvq_v3(vq_model, gemma_model, res_model, tokenizer, i
     input_text = '### Input:\n' + "Description: " + input + "\nMotion of the first person: <Motion>" + tokenizer.decode(motion1) + '</Motion>\n\nResponse: <Motion>'
     input_texts = prompt + instruction + input_text
     print(input_texts)
-    input_ids = tokenizer.encode(input_texts, return_tensors="pt").cuda()
+    input_ids = tokenizer.encode(input_texts, return_tensors="pt").to(device)
     motion2 = gemma_model.generate(input_ids, max_length=300, num_beams=5, no_repeat_ngram_size=2, early_stopping=True)
     motion2 = motion2[0, len(input_ids[0]):]
     print(tokenizer.decode(motion2))
@@ -210,7 +216,9 @@ class EvaluationDataset(Dataset):
                 # batch = self.model.forward_test(motion1, motion2, motion_lens)
                 # batches = batch['output']
                 max_len = motion1.shape[1]
-                codebook_emb = gemma_model.model.model.embed_tokens(torch.tensor(token_trans).cuda())
+                # Infer device from the gemma_model
+                device = next(gemma_model.parameters()).device
+                codebook_emb = gemma_model.model.model.embed_tokens(torch.tensor(token_trans).to(device))
                 motion1, motion2 = generate_one_motion_IG_rvq(self.model, gemma_model, res_model, tokenizer, text[0], codebook_emb)
                 # print(motion1.shape)
                 if motion1.shape[1] > max_len:

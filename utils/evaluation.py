@@ -7,6 +7,7 @@ from utils.word_vectorizer import WordVectorizer
 w_vectorizer = WordVectorizer('./glove', 'our_vab')
 
 from utils.motion_utils import plot_3d_motion, recover_from_ric
+from tqdm import tqdm
 os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
 
 
@@ -32,19 +33,19 @@ def evaluation_test(out_dir, val_loader, model, eval_wrapper, draw = False, save
     matching_score_pred = 0
 
     nb_sample = 0
-    
-    for batch in val_loader:
+
+    for batch in tqdm(val_loader, desc="Evaluating", unit="batch"):
 
         word_embeddings, pos_one_hots, caption, sent_len, pose, m_length, token, name = batch
         bs, seq = pose.shape[:2]
         num_joints = 21 if pose.shape[-1] == 251 else 22
-        
+
         motion_multimodality_batch = []
         for i in range(1): # this loop is for multimodality, due to the computation cost, we don't calculate multimodality here
             pred_pose_eval = torch.zeros((bs, seq, pose.shape[-1])).to(device)
             pred_len = torch.ones(bs).long()
-            
-            for k in range(bs):
+
+            for k in tqdm(range(bs), desc=f"Generating batch samples", leave=False, unit="sample"):
                 try:
                 #     # print(caption[k])
                     # index_motion = model.generate(caption[k])

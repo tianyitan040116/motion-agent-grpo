@@ -11,8 +11,8 @@ class MotionLLM(nn.Module):
         super().__init__()
         
         self.args = args
-        self.tokenizer = AutoTokenizer.from_pretrained(self.args.llm_backbone)
-        self.llm = AutoModelForCausalLM.from_pretrained(self.args.llm_backbone)
+        self.tokenizer = AutoTokenizer.from_pretrained(self.args.llm_backbone, local_files_only=True)
+        self.llm = AutoModelForCausalLM.from_pretrained(self.args.llm_backbone, local_files_only=True)
         self.nb_text_tokens = len(self.tokenizer)
         self.mean = np.load('checkpoints/t2m/VQVAEV3_CB1024_CMT_H1024_NRES3/meta/mean.npy')
         self.std = np.load('checkpoints/t2m/VQVAEV3_CB1024_CMT_H1024_NRES3/meta/std.npy')
@@ -35,6 +35,10 @@ class MotionLLM(nn.Module):
             bias="none",
             task_type="CAUSAL_LM"
         )
+
+        # Move LLM to device BEFORE adding LoRA adapters
+        self.llm = self.llm.to(self.device)
+
         self.llm = get_peft_model(self.llm, self.lora_config_t2m, adapter_name='t2m')
         self.llm.add_adapter('m2t', self.lora_config_m2t)
 
@@ -59,12 +63,12 @@ class MotionLLM(nn.Module):
         self.net.to(self.device)
 
         self.tokenizer.add_tokens(['<Motion>', '</Motion>'])
-        self.motion_token_indices = np.arange(self.args.nb_code) 
+        self.motion_token_indices = np.arange(self.args.nb_code)
         self.motion_token_indices = len(self.tokenizer) + self.motion_token_indices
         for i in range(self.args.nb_code):
             self.tokenizer.add_tokens([f'<Motion_{i}>'])
         self.llm.resize_token_embeddings(len(self.tokenizer))
-        self.llm.to(self.device)
+        # LLM is already on device from earlier
         self.llm.eval()
 
         # print(self.llm)
@@ -153,9 +157,9 @@ class MotionLLM(nn.Module):
         input_text = '### Input:\n' + input + '\n\nResponse: <Motion>'
         input = prompt + instruction + input_text
         # print(input)
-        input_ids = self.tokenizer.encode(input, return_tensors="pt").cuda()
+        input_ids = self.tokenizer.encode(input, return_tensors="pt").to(self.device)
         # print(input_ids)
-        # input_ids = tokenizer(input, return_tensors="pt").input_ids.cuda()
+        # input_ids = tokenizer(input, return_tensors="pt").input_ids.to(self.device)
         motion = self.llm.generate(input_ids, max_length=200, num_beams=5, early_stopping=True)
         # motion = gemma_model.generate(input_ids, max_length=200, num_beams=5, early_stopping=False)
         # print(input_ids.shape)
@@ -167,6 +171,42 @@ class MotionLLM(nn.Module):
 
         return torch.clamp(motion - (len(self.tokenizer) - self.args.nb_code), min=0)
     
+    def generate_one_motion_sampling(self, input, temperature=1.0, top_p=0.9, max_length=200):
+        """Generate motion tokens using temperature sampling for diverse outputs (used by GRPO)."""
+        self.llm.set_adapter('t2m')
+
+        prompt = "Below is an instruction that describes a task, paired with an input that provides further context. Write a response that appropriately completes the request.\n\n"
+        instruction = "### Instruction:\nGenerate a motion matching the following input human motion description\n\n"
+        input_text = '### Input:\n' + input + '\n\nResponse: <Motion>'
+        input = prompt + instruction + input_text
+        input_ids = self.tokenizer.encode(input, return_tensors="pt").to(self.device)
+        motion = self.llm.generate(
+            input_ids,
+            max_new_tokens=max_length,
+            do_sample=True,
+            temperature=temperature,
+            top_p=top_p,
+            num_beams=1,
+        )
+        motion = motion[0, len(input_ids[0]):]
+        eom = self.tokenizer.encode('</Motion>', return_tensors="pt", add_special_tokens=False).item()
+        if eom in motion.tolist():
+            motion = motion[:motion.tolist().index(eom)]
+
+        return torch.clamp(motion - (len(self.tokenizer) - self.args.nb_code), min=0)
+
+    def generate_batch_motion_sampling(self, captions, temperature=1.0, top_p=0.9, max_length=200, sub_batch_size=128):
+        """Generate motion tokens for a list of captions, processing in sub-batches."""
+        results = []
+        for i in range(0, len(captions), sub_batch_size):
+            sub = captions[i:i + sub_batch_size]
+            for caption in sub:
+                tokens = self.generate_one_motion_sampling(
+                    caption, temperature=temperature, top_p=top_p, max_length=max_length
+                )
+                results.append(tokens)
+        return results
+
     def caption(self, motion):
         self.llm.set_adapter('m2t')
         self.llm.eval()

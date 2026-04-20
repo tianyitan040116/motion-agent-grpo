@@ -139,7 +139,8 @@ def qrot_np(q, v):
 
 def qeuler_np(q, order, epsilon=0, use_gpu=False):
     if use_gpu:
-        q = torch.from_numpy(q).cuda().float()
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        q = torch.from_numpy(q).to(device).float()
         return qeuler(q, order, epsilon).cpu().numpy()
     else:
         q = torch.from_numpy(q).contiguous().float()

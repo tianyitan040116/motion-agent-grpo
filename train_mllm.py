@@ -43,7 +43,7 @@ if __name__ == "__main__":
     logger.info(json.dumps(vars(args), indent=4, sort_keys=True))
 
     # load dataset for evaluation
-    w_vectorizer = WordVectorizer('../LLM-MotionGen/glove', 'our_vab')
+    w_vectorizer = WordVectorizer('./glove', 'our_vab')
     args.dataname = 't2m'
     dataset_opt_path = 'checkpoints/t2m/Comp_v6_KLD005/opt.txt'
     wrapper_opt = get_opt(dataset_opt_path, args.device)

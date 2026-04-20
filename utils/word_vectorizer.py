@@ -62,7 +62,10 @@ class WordVectorizer(object):
         return len(self.word2vec)
 
     def __getitem__(self, item):
-        word, pos = item.split('/')
+        if '/' in item:
+            word, pos = item.rsplit('/', 1)
+        else:
+            word, pos = item, 'NOUN'
         if word in self.word2vec:
             word_vec = self.word2vec[word]
             vip_pos = None
@@ -87,7 +90,10 @@ class WordVectorizerV2(WordVectorizer):
 
     def __getitem__(self, item):
         word_vec, pose_vec = super(WordVectorizerV2, self).__getitem__(item)
-        word, pos = item.split('/')
+        if '/' in item:
+            word, pos = item.rsplit('/', 1)
+        else:
+            word, pos = item, 'NOUN'
         if word in self.word2vec:
             return word_vec, pose_vec, self.word2idx[word]
         else:

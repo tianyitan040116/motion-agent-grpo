@@ -22,18 +22,21 @@ def motion_agent_demo():
     motion_agent.chat()
 
 def motionllm_demo():
-    model = MotionLLM(get_args_parser())
+    args = get_args_parser()
+    device = torch.device(args.device if torch.cuda.is_available() else 'cpu')
+
+    model = MotionLLM(args)
     model.load_model('ckpt/motionllm.pth')
     model.llm.eval()
-    model.llm.cuda()
-    
+    model.llm.to(device)
+
     caption = 'A man is doing cartwheels.'
     # motion = model.generate(caption)
     motion = model.generate_one_motion(caption)
     motion = model.net.forward_decoder(motion)
 
     motion = model.denormalize(motion.detach().cpu().numpy())
-    motion = recover_from_ric(torch.from_numpy(motion).float().cuda(), 22)
+    motion = recover_from_ric(torch.from_numpy(motion).float().to(device), 22)
     print(motion.shape)
     plot_3d_motion(f"motionllm_demo.mp4", t2m_kinematic_chain, motion.squeeze().detach().cpu().numpy(), title=caption, fps=20, radius=4)
 

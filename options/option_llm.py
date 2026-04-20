@@ -8,8 +8,8 @@ def get_args_parser():
     ## device
     parser.add_argument('--device', type=str, default='cuda:0', help='device')
 
-    ## LLM 
-    parser.add_argument('--llm-backbone', type=str, default='google/gemma-2-2b-it', help='name of huggingface model backbone')
+    ## LLM
+    parser.add_argument('--llm-backbone', type=str, default=r"C:\Users\tianyi\Downloads\gemma-2-2b-it", help='name of huggingface model backbone')
     parser.add_argument('--lora-r-t2m', type=int, default=64, help='lora_r for t2m')
     parser.add_argument('--lora-alpha-t2m', type=int, default=64, help='lora_alpha for t2m')
     parser.add_argument('--lora-r-m2t', type=int, default=32, help='lora_r for m2t')

@@ -166,3 +166,32 @@ ckpt
 experiments
 *.out
 *.pth
+# Local datasets, checkpoints, generated artifacts
+.claude/
+.vscode/
+dataset.zip
+node-v20.18.0-linux-x64.tar.xz
+venv_grpo/
+generated_motions/
+experiments_grpo/
+grpo_output/
+smoke_test_output/
+
+# Keep dataset code, ignore dataset payloads
+!dataset/*.py
+dataset/__pycache__/
+dataset/*.npy
+dataset/*.txt
+dataset/joints/
+dataset/new_joints/
+dataset/new_joint_vecs/
+dataset/pose_data/
+dataset/texts/
+
+# Keep helper download scripts, ignore downloaded assets and weights
+glove/
+*.log
+*.out
+*.pth
+*.pt
+*.ckpt
