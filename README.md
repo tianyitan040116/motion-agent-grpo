@@ -1,15 +1,10 @@
 # motion-agent-grpo
 
-An experimental fork of Motion-Agent focused on local training, GRPO-style reward design, evaluation utilities, and motion generation workflows.
-
-<p align="center">
-  <a href="https://arxiv.org/abs/2405.17013"><img alt="arXiv" src="https://img.shields.io/badge/arXiv-2405.17013-b31b1b.svg"></a>
-  <a href="https://knoxzhao.github.io/Motion-Agent/"><img alt="Project Page" src="https://img.shields.io/badge/Project-Page-orange"></a>
-</p>
+An experimental repository for GRPO-based reinforcement learning on top of a motion generation codebase, with additional local training, evaluation, and monitoring utilities.
 
 ## What This Repo Contains
 
-This repository builds on the original Motion-Agent codebase and adds local experimentation utilities around:
+This repository contains a locally adapted motion-generation research codebase, with my main contributions centered on:
 
 - GRPO training and reward shaping
 - motion generation scripts for local checkpoints
@@ -21,7 +16,7 @@ This public repository intentionally excludes large local assets such as dataset
 
 ## Project Status
 
-This is a research and experimentation repository rather than a polished package. Expect active iteration, local-tooling scripts, and training-oriented utilities.
+This is a research and experimentation repository rather than a polished package. The GRPO-related reinforcement learning workflow is the main original direction in this repo; the rest is supporting code adapted from an existing base and further modified for local experiments.
 
 ## Repository Layout
 
@@ -59,7 +54,7 @@ pip install -r requirements.txt
 
 The repo does not include pretrained weights or dataset payloads. Download them separately as needed.
 
-For the original Motion-Agent resources:
+Example helper scripts included in this repo:
 
 ```bash
 bash prepare/download_ckpt.sh
@@ -67,7 +62,7 @@ bash prepare/download_glove.sh
 bash prepare/download_extractor.sh
 ```
 
-If you use a Hugging Face LLM backbone such as Gemma, make sure you have access to the model and have authenticated locally.
+If you use a gated or external LLM backbone, make sure you have access to the model and have authenticated locally.
 
 ## Quick Start
 
@@ -121,36 +116,10 @@ If you want to reproduce experiments, place those assets locally in the expected
 - Several utilities are intended for internal research workflows and may require path or checkpoint adjustments.
 - If you plan to make this repo broadly reusable, a next good step would be centralizing configuration and documenting expected input formats per script.
 
-## Upstream Reference
+## Contribution Scope
 
-This work is based on the original Motion-Agent project:
+To avoid confusion:
 
-- Paper: [Motion-Agent: A Conversational Framework for Human Motion Generation with LLMs](https://arxiv.org/abs/2405.17013)
-- Project page: [Motion-Agent](https://knoxzhao.github.io/Motion-Agent/)
-
-## Citation
-
-If the upstream project is useful in your work, please cite:
-
-```bibtex
-@article{wu2024motion,
-  title={Motion-Agent: A Conversational Framework for Human Motion Generation with LLMs},
-  author={Wu, Qi and Zhao, Yubo and Wang, Yifan and Liu, Xinhang and Tai, Yu-Wing and Tang, Chi-Keung},
-  journal={arXiv preprint arXiv:2405.17013},
-  year={2024}
-}
-
-@inproceedings{wumotion,
-  title={Motion-Agent: A Conversational Framework for Human Motion Generation with LLMs},
-  author={Wu, Qi and Zhao, Yubo and Wang, Yifan and Liu, Xinhang and Tai, Yu-Wing and Tang, Chi-Keung},
-  booktitle={The Thirteenth International Conference on Learning Representations}
-}
-```
-
-## Acknowledgements
-
-Thanks to the original open-source projects that this codebase builds on:
-
-- [T2M-GPT](https://github.com/Mael-zys/T2M-GPT)
-- [NExT-GPT](https://github.com/NExT-GPT/NExT-GPT)
-- [text-to-motion](https://github.com/EricGuo5513/text-to-motion)
+- the GRPO reinforcement learning direction and related experimentation in this repository are my own work
+- much of the surrounding motion-generation infrastructure was cloned from an existing repository and then modified locally
+- this repository should be read as an experimental adaptation rather than a fully from-scratch implementation
